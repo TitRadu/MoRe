@@ -8,6 +8,12 @@ import java.nio.file.Paths
 import java.util.*
 import kotlin.io.path.createTempDirectory
 
+class Extension(name: String) {
+    var name: String = name
+    var count: Int = 1
+
+}
+
 fun parseDirectory(path: String): List<String>? {
     val d = File(path)
     if (!d.exists()) {
@@ -25,27 +31,68 @@ fun parseDirectory(path: String): List<String>? {
 
 }
 
-fun moveFilesToExtensionsDirectories(sortDirectoryPath : String, files: List<String>, extensions: MutableList<String>) {
+fun obtainExtensions(directoryPath: String): List<Extension>? {
+    val files: List<String> = parseDirectory(directoryPath) ?: return null
+    val extensions: MutableList<Extension> = LinkedList()
     for (file in files) {
-        //println(file)
-        val extension = file.substringAfterLast(".")
-        if (extension == file) {
+        val extensionName = file.substringAfterLast(".")
+        if (extensionName == file) {
             continue
 
         } else {
-            if (!extensions.contains(extension)) {
-                extensions.add(extension)
-                println(extension)
-                val extensionDirectory = File(sortDirectoryPath + "\\" + extension)
+            if (!extensions.contains(extensionName)) {
+                extensions.add(Extension(extensionName))
+                println(extensionName)
+                val extensionDirectory = File(directoryPath + "\\" + extensionName)
                 extensionDirectory.mkdir()
 
             }
 
-            val sourcePath = File(sortDirectoryPath + "\\" + file)
-            val targetPath = File(sortDirectoryPath + "\\" + extension + "\\" + file)
-            sourcePath.renameTo(targetPath)
+        }
+
+    }
+
+    return extensions
+}
+
+fun renameFiles(directoryPath: String, extensions: List<Extension>) {
+    val files: List<String> = parseDirectory(directoryPath) ?: return
+    for (file in files) {
+        val extensionName = file.substringAfterLast(".")
+        if (extensionName == file) {
+            continue
 
         }
+        val extension = getExtensionByName(extensionName, extensions) ?: return
+        val oldFilePath = File(directoryPath + "\\" + file)
+        val newFilePath = File(directoryPath + "\\" + "file" + extension.count + "." + extensionName)
+        oldFilePath.renameTo(newFilePath)
+        extension.count++
+
+    }
+
+}
+
+fun getExtensionByName(extensionName: String, extensions: List<Extension>): Extension? {
+    for (ext in extensions) {
+        if (ext.name == extensionName)
+            return ext
+
+    }
+
+    return null
+}
+
+fun moveFilesToExtensionsDirectories(directoryPath: String, extensions: List<Extension>) {
+    val files: List<String> = parseDirectory(directoryPath) ?: return
+    for (file in files) {
+        val extensionName = file.substringAfterLast(".")
+        if (extensionName == file) {
+            continue
+        }
+        val sourcePath = File(directoryPath + "\\" + file)
+        val targetPath = File(directoryPath + "\\" + extensionName + "\\" + file)
+        sourcePath.renameTo(targetPath)
 
     }
 
@@ -58,10 +105,9 @@ fun main(args: Array<String>) {
         return
 
     }
-    val directoryName = args[0].substringAfterLast("\\").substringAfterLast("/")
-    val files: List<String> = parseDirectory(args[0]) ?: return
-    val extensions: MutableList<String> = LinkedList()
 
-    moveFilesToExtensionsDirectories(args[0], files, extensions)
+    val extensions: List<Extension> = obtainExtensions(args[0]) ?: return
+    renameFiles(args[0], extensions)
+    moveFilesToExtensionsDirectories(args[0], extensions)
 
 }
