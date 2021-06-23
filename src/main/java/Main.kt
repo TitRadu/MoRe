@@ -42,9 +42,6 @@ fun obtainExtensions(directoryPath: String): List<Extension>? {
         } else {
             if (!extensions.contains(extensionName)) {
                 extensions.add(Extension(extensionName))
-                println(extensionName)
-                val extensionDirectory = File(directoryPath + "\\" + extensionName)
-                extensionDirectory.mkdir()
 
             }
 
@@ -85,6 +82,12 @@ fun getExtensionByName(extensionName: String, extensions: List<Extension>): Exte
 
 fun moveFilesToExtensionsDirectories(directoryPath: String, extensions: List<Extension>) {
     val files: List<String> = parseDirectory(directoryPath) ?: return
+    for(ext in extensions){
+        val extensionDirectory = File(directoryPath + "\\" + ext.name)
+        extensionDirectory.mkdir()
+
+    }
+
     for (file in files) {
         val extensionName = file.substringAfterLast(".")
         if (extensionName == file) {
@@ -100,14 +103,27 @@ fun moveFilesToExtensionsDirectories(directoryPath: String, extensions: List<Ext
 
 
 fun main(args: Array<String>) {
-    if (args.size != 1) {
+    if (args.isEmpty() || args.size > 2) {
         print("Invalid number of arguments!")
         return
 
     }
 
+    if(args.size == 2 && (args[1]!="-r" && args[1]!= "-m")){
+        print("Invalid option!")
+        return
+
+    }
+
     val extensions: List<Extension> = obtainExtensions(args[0]) ?: return
-    renameFiles(args[0], extensions)
-    moveFilesToExtensionsDirectories(args[0], extensions)
+
+    if(args.size == 1 || (args.size == 2 && args[1] == "-r")){
+        renameFiles(args[0], extensions)
+
+    }
+    if(args.size == 1 || (args.size == 2 && args[1] == "-m")) {
+        moveFilesToExtensionsDirectories(args[0], extensions)
+
+    }
 
 }
