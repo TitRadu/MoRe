@@ -9,8 +9,7 @@ class Platform{
 
 }
 
-class Extension(name: String) {
-    var name: String = name
+class Extension(var name: String) {
     var count: Int = 1
 
 }
@@ -40,7 +39,7 @@ fun obtainFiles(directoryPath: String): List<String>{
         val f = File(directoryPath + Platform.platformDelimiter + file)
         if(!f.isDirectory){
             filesWithoutDirectoriesList.add(file)
-            //println(file)
+
         }
 
     }
@@ -49,8 +48,9 @@ fun obtainFiles(directoryPath: String): List<String>{
 
 }
 
-fun obtainExtensions(directoryPath: String): List<Extension>? {
+fun obtainExtensions(directoryPath: String): List<Extension> {
     val files: List<String> = obtainFiles(directoryPath)
+    val extensionsNames: MutableList<String> = LinkedList()
     val extensions: MutableList<Extension> = LinkedList()
     for (file in files) {
         val extensionName = file.substringAfterLast(".")
@@ -58,7 +58,8 @@ fun obtainExtensions(directoryPath: String): List<Extension>? {
             continue
 
         } else {
-            if (!extensions.contains(extensionName)) {
+            if (!extensionsNames.contains(extensionName)) {
+                extensionsNames.add(extensionName)
                 extensions.add(Extension(extensionName))
 
             }
@@ -135,13 +136,13 @@ fun selectPlatformDelimiter(directoryPath: String){
 
 fun main(args: Array<String>) {
     if (args.isEmpty() || args.size > 2) {
-        print("Invalid number of arguments!")
+        println("Invalid number of arguments!")
         return
 
     }
 
     if(args.size == 2 && (args[1]!="-r" && args[1]!= "-m")){
-        print("Invalid option!")
+        println("Invalid option!")
         return
 
     }
@@ -153,9 +154,7 @@ fun main(args: Array<String>) {
 
     selectPlatformDelimiter(args[0])
 
-    print(Platform.platformDelimiter)
-
-    val extensions: List<Extension> = obtainExtensions(args[0]) ?: return
+    val extensions: List<Extension> = obtainExtensions(args[0])
 
     if(args.size == 1 || (args.size == 2 && args[1] == "-r")){
         renameFiles(args[0], extensions)
